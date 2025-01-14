@@ -6,7 +6,7 @@ This is a simple Todo application built with React and Redux.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/my-todo-app.git
+   git clone https://github.com/AydinHabibi1991/ideal.git
    cd my-todo-app
    ```
 
@@ -40,11 +40,7 @@ This is a simple Todo application built with React and Redux.
 3. **Open the application:**
    Open your browser and navigate to the URL provided by the `serve` command.
 
-## Folder Structure
 
-- `src/components`: Contains all the React components.
-- `src/redux`: Contains Redux slices and store configuration.
-- `src/types`: Contains TypeScript type definitions.
 
 ## Available Scripts
 
