@@ -35,7 +35,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleToggleCompleted = (e: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    e.stopPropagation(); // Ensure the modal doesn't open
+    e.stopPropagation();
     dispatch(updateTask({
       ...task,
       completed: checked,
@@ -47,17 +47,17 @@ const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   };
 
   const handleDelete = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation(); // Prevent modal from opening
+    e.stopPropagation(); 
     dispatch(deleteTask(task.id));
   };
 
   const handleArchive = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation(); // Prevent modal from opening
+    e.stopPropagation(); 
     dispatch(toggleArchiveTask(task.id));
   };
 
   const handleUpdate = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation(); // Prevent modal from opening
+    e.stopPropagation();
     const updatedTitle = prompt('Update task title:', task.title);
     const updatedDescription = prompt('Update task description:', task.description);
 

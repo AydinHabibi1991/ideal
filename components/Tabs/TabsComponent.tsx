@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { Box } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -18,168 +18,145 @@ import TaskCreationDialog from './TaskCreationDialog';
 
 import TaskList from '../TaskList/TaskList';
 
-
 interface TabsContainerProps {
   tasks: Task[];
   addTask: (task: Task) => void;
 }
 
-interface TabsContainerState {
-  activeMainTab: 'today' | 'tomorrow';
-  activeFilterTab: number;
-  openDialog: boolean;
-  title: string;
-  description: string;
-  day: 'today' | 'tomorrow';
-  time: dayjs.Dayjs | null;
-}
+const TabsContainer: React.FC<TabsContainerProps> = ({ tasks, addTask }) => {
+  const [activeMainTab, setActiveMainTab] = useState<'today' | 'tomorrow'>('today');
+  const [activeFilterTab, setActiveFilterTab] = useState<number>(0);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [day, setDay] = useState<'today' | 'tomorrow'>('today');
+  const [time, setTime] = useState<dayjs.Dayjs | null>(null);
 
-
-class TabsContainer extends Component<TabsContainerProps, TabsContainerState> {
-  state: TabsContainerState = {
-    activeMainTab: 'today',
-    activeFilterTab: 0,
-    openDialog: false,
-    title: '',
-    description: '',
-    day: 'today',
-    time: null,
+  const handleMainTabChange = (
+    event: React.SyntheticEvent,
+    newValue: 'today' | 'tomorrow'
+  ) => {
+    setActiveMainTab(newValue);
   };
 
-  handleMainTabChange = (event: React.SyntheticEvent, newValue: 'today' | 'tomorrow') => {
-    this.setState({ activeMainTab: newValue });
+  const handleFilterTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveFilterTab(newValue);
   };
 
-  handleFilterTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    this.setState({ activeFilterTab: newValue });
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
   };
 
-  handleOpenDialog = () => {
-    this.setState({ openDialog: true });
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setTitle('');
+    setDescription('');
+    setDay('today');
+    setTime(null);
   };
 
-  handleCloseDialog = () => {
-    this.setState({
-      openDialog: false,
-      title: '',
-      description: '',
-      day: 'today',
-      time: null,
-    });
-  };
-
-  handleAddTask = () => {
-    const { title, description, day, time } = this.state;
+  const handleAddTask = () => {
     if (title && description && day && time) {
-      this.props.addTask({
+      addTask({
         title,
         description,
         day,
-        time: dayjs(time).format('HH:mm'), 
+        time: dayjs(time).format('HH:mm'),
       });
-      this.handleCloseDialog();
+      handleCloseDialog();
     } else {
       alert('All fields are required!');
     }
   };
 
-
-  calculateTaskCounts() {
-    const { tasks } = this.props;
+  const calculateTaskCounts = () => {
     const all = tasks.length;
     const open = tasks.filter((task) => !task.completed && !task.archived).length;
     const closed = tasks.filter((task) => task.completed && !task.archived).length;
     const archived = tasks.filter((task) => task.archived).length;
     return { all, open, closed, archived };
-  }
+  };
 
-  filterTasksByDay(tasks: Task[], day: 'today' | 'tomorrow') {
-    return tasks.filter((task) => task.day === day);
-  }
+  const filterTasksByDay = (tasksList: Task[], selectedDay: 'today' | 'tomorrow') => {
+    return tasksList.filter((task) => task.day === selectedDay);
+  };
 
-  filterTasksByStatus(tasks: Task[], filter: 'all' | 'open' | 'closed' | 'archived') {
+  const filterTasksByStatus = (
+    tasksList: Task[],
+    filter: 'all' | 'open' | 'closed' | 'archived'
+  ) => {
     switch (filter) {
       case 'open':
-        return tasks.filter((t) => !t.completed && !t.archived);
+        return tasksList.filter((t) => !t.completed && !t.archived);
       case 'closed':
-        return tasks.filter((t) => t.completed && !t.archived);
+        return tasksList.filter((t) => t.completed && !t.archived);
       case 'archived':
-        return tasks.filter((t) => t.archived);
-      case 'all':
+        return tasksList.filter((t) => t.archived);
       default:
-        
-        return tasks.filter((t) => !t.archived);
+        // 'all'
+        return tasksList.filter((t) => !t.archived);
     }
-  }
+  };
 
-  getFormattedDate(day: 'today' | 'tomorrow') {
-    const date = day === 'today' ? dayjs() : dayjs().add(1, 'day');
-    return date.format('dddd, MMMM D'); // e.g., "Wednesday, May 11"
-  }
+  const getFormattedDate = (selectedDay: 'today' | 'tomorrow') => {
+    const date = selectedDay === 'today' ? dayjs() : dayjs().add(1, 'day');
+    return date.format('dddd, MMMM D'); 
+  };
 
-  render() {
-    const {
-      activeMainTab,
-      activeFilterTab,
-      openDialog,
-      title,
-      description,
-      day,
-      time,
-    } = this.state;
-    const { tasks } = this.props;
 
-    let filteredTasks = this.filterTasksByDay(tasks, activeMainTab);
+  let filteredTasks = filterTasksByDay(tasks, activeMainTab);
 
-    const filterKey = ['all', 'open', 'closed', 'archived'][activeFilterTab];
-    filteredTasks = this.filterTasksByStatus(filteredTasks, filterKey as 'all' | 'open' | 'closed' | 'archived');
 
-    const { all, open, closed, archived } = this.calculateTaskCounts();
+  const filterKey = ['all', 'open', 'closed', 'archived'][activeFilterTab];
+  filteredTasks = filterTasksByStatus(
+    filteredTasks,
+    filterKey as 'all' | 'open' | 'closed' | 'archived'
+  );
 
-    return (
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Box sx={{ padding: { xs: 1, md: 2 } }}>
-          <DayTabs 
-            activeMainTab={activeMainTab}
-            onChange={this.handleMainTabChange}
-          />
+  const { all, open, closed, archived } = calculateTaskCounts();
 
-          <HeaderSection
-            activeMainTab={activeMainTab}
-            getFormattedDate={this.getFormattedDate.bind(this)}
-            onOpenDialog={this.handleOpenDialog}
-          />
-
-          <FilterTabs
-            activeFilterTab={activeFilterTab}
-            onChange={this.handleFilterTabChange}
-            all={all}
-            open={open}
-            closed={closed}
-            archived={archived}
-          />
-
-          <TaskList tasks={filteredTasks} />
-        </Box>
-
-        <TaskCreationDialog
-          open={openDialog}
-          title={title}
-          description={description}
-          day={day}
-          time={time}
-          onClose={this.handleCloseDialog}
-          onAddTask={this.handleAddTask}
-          onTitleChange={(val) => this.setState({ title: val })}
-          onDescriptionChange={(val) => this.setState({ description: val })}
-          onDayChange={(val) => this.setState({ day: val })}
-          onTimeChange={(val) => this.setState({ time: val })}
+  return (
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ padding: { xs: 1, md: 2 } }}>
+        <DayTabs
+          activeMainTab={activeMainTab}
+          onChange={handleMainTabChange}
         />
-      </LocalizationProvider>
-    );
-  }
-}
 
+        <HeaderSection
+          activeMainTab={activeMainTab}
+          getFormattedDate={getFormattedDate}
+          onOpenDialog={handleOpenDialog}
+        />
+
+        <FilterTabs
+          activeFilterTab={activeFilterTab}
+          onChange={handleFilterTabChange}
+          all={all}
+          open={open}
+          closed={closed}
+          archived={archived}
+        />
+
+        <TaskList tasks={filteredTasks} />
+      </Box>
+
+      <TaskCreationDialog
+        open={openDialog}
+        title={title}
+        description={description}
+        day={day}
+        time={time}
+        onClose={handleCloseDialog}
+        onAddTask={handleAddTask}
+        onTitleChange={setTitle}
+        onDescriptionChange={setDescription}
+        onDayChange={setDay}
+        onTimeChange={setTime}
+      />
+    </LocalizationProvider>
+  );
+};
 
 const mapStateToProps = (state: RootState) => ({
   tasks: state.tasks.tasks,
